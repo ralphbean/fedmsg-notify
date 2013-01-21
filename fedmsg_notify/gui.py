@@ -41,7 +41,19 @@ class FedmsgNotifyConfigWindow(Gtk.ApplicationWindow):
         self.enabled_filters = self.settings.get_string('enabled-filters').split()
         self.filter_settings = self.settings.get_string('filter-settings')
         if self.filter_settings:
-            self.filter_settings = json.loads(self.filter_settings)
+            try:
+                self.filter_settings = json.loads(self.filter_settings)
+            except ValueError:
+                # We couldn't load valid JSON from the filter_settings.  The
+                # user has likely upgraded from an old version of fedmsg-notify.
+                # We'll override the old settings with the empty json dict
+                # so we don't hit this error again.
+                self.filter_settings = {}
+                self.settings.set_string('filter-settings', json.dumps({}))
+        else:
+            # Otherwise, there was no string all in gsettings.. start with an
+            # empty dict, then.
+            self.filter_settings = {}
 
         self.bus = dbus.SessionBus()
         running = self.bus.name_has_owner(self.bus_name)
