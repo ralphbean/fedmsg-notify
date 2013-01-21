@@ -117,7 +117,13 @@ class FedmsgNotifyService(dbus.service.Object, fedmsg.consumers.FedmsgConsumer):
         self.enabled = True
 
     def load_filters(self):
-        filter_settings = json.loads(self.settings.get_string('filter-settings'))
+        try:
+            filter_settings = json.loads(
+                self.settings.get_string('filter-settings'))
+        except ValueError:
+            # No JSON could be loaded.
+            filter_settings = {}
+
         self.filters = [filter(filter_settings.get(filter.__name__, []))
                         for filter in filters]
 
